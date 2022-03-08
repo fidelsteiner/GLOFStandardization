@@ -32,6 +32,7 @@ library(RColorBrewer)
 library(sp)
 library(geosphere)
 library(secr)
+library(rgee)
 
 ##########################
 # SPECIFY FILENAMES AND DESIRED PROJECTION
@@ -182,10 +183,11 @@ e_deg <- spTransform(e,CRS("+proj=longlat +datum=WGS84"))
 
 slopeHeadWalls <- terrain_slope_deg
 slopeDam <- terrain_slope_deg
-slopeHeadWalls[which(LDEM_deg[]<(lake_elev+10))] <- NA
-slopeDam[which(LDEM_deg[]>(lake_elev))] <- NA
+slopeHeadWalls[which(LDEM_deg[]<(lake_elev+20))] <- NA
+slopeDam[which(LDEM_deg[]>(lake_elev+20))] <- NA
 adjacentSlope <- mask(slopeHeadWalls,e_deg)
 slopeDam <- mask(slopeDam,e_deg)
+
 lakes_loc$adjecentheadwalls[i] <- cellStats(adjacentSlope,'mean')
 lakes_loc$slopeDam[i] <- cellStats(slopeDam,'mean')
 
@@ -221,10 +223,10 @@ if(length(which(LSsources>0))>5& quantile(adjacentSlope, probs = c(0.75)) > 30){
 # Make output Table
 
 lakes_loc$seismic[i] <- lake_seis
-seisScore <- lake_seis/9.81
+seisScore <- lake_seis
 if(is.na(seisScore)){
   lakes_loc$seismic_score[i] <- NA
-}else if(seisScore>0.18){
+}else if(seisScore>0.414){
   lakes_loc$seismic_score[i] <- 1
 }else{
   lakes_loc$seismic_score[i] <- 0
@@ -242,4 +244,4 @@ lakes_loc$precip[i] <- lake_prec
 #}
 }
 
-writeOGR(lakes_loc, dsn = path_lakes&'\\'&lake_filename_shp&'updated' , layer = "lakes_loc")
+writeOGR(lakes_loc, dsn = path_lakes&'\\Lakes_processed' , driver = "ESRI Shapefile",layer='lakes_loc')
