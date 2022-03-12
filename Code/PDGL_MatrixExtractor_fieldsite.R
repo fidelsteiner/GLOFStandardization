@@ -33,6 +33,7 @@ library(sp)
 library(geosphere)
 library(secr)
 library(rgee)
+library(terra)
 
 ##########################
 # SPECIFY FILENAMES AND DESIRED PROJECTION
@@ -93,14 +94,14 @@ regionalPF <- crop(regionalPF,extent(regionalDEM))
 
 path_lakes <- 'D:\\Work\\Code\\GLOFStandardization\\Data\\TrainingExamples\\DudhKosi'
 
-lake_filename_shp <- 'Lakes.shp'                  # lakes filename
+lake_filename_shp <- 'GLakes_2020.shp'                  # lakes filename
 ogrInfo(path_lakes&'\\'&lake_filename_shp)
 lakes_loc<-readOGR(dsn=path_lakes&'\\'&lake_filename_shp)
 lakes_loc_deg <- spTransform(lakes_loc,projec_deg)
 lakes_loc <- spTransform(lakes_loc,projec)
 
 
-for(i in 1:length(lakes_loc$GLIMS_ID)){
+for(i in 306:length(lakes_loc$GLIMS_ID)){
 
 #########################
 # Evaluate individual lakes
@@ -166,6 +167,15 @@ lakes_loc$mindisttoglac[i] <- min(pts.wit.dist[,3])
   lakes_loc$slopelowertongue[i] <- NA
   lakes_loc$mindisttoglac[i] <- NA
 }
+
+s <- vect(lakes_loc_deg[i,])
+f <- vect(RGI_selected_deg)
+if(relate(s, f, "intersects")[1]==F){
+  lakes_loc$slopelowertongue[i] <- NA
+  lakes_loc$mindisttoglac[i] <- 0
+}
+
+
 # Lake elevation
 lake_elev <- cellStats(mask(LDEM_deg,lakes_loc_deg[i,]),'min')
 
@@ -244,4 +254,4 @@ lakes_loc$precip[i] <- lake_prec
 #}
 }
 
-writeOGR(lakes_loc, dsn = path_lakes&'\\Lakes_processed' , driver = "ESRI Shapefile",layer='lakes_loc')
+writeOGR(lakes_loc, dsn = path_lakes&'\\Lakes_processed' , driver = "ESRI Shapefile",layer='lakes_loc',overwrite=T)
